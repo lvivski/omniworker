@@ -1,0 +1,30 @@
+{
+  "name": "omniworker",
+  "version": "0.1.0",
+  "description": "Universal Worker",
+  "license": "MIT",
+  "repository": "lvivski/omniworker",
+  "author": {
+    "name": "Yehor Lvivski",
+    "email": "yehor@lvivski.com",
+    "url": "https://lvivski.com"
+  },
+  "type": "module",
+  "exports": "./index.js",
+  "types": "./index.d.ts",
+  "scripts": {
+    "prepare": "tsc"
+  },
+  "files": [
+    "index.js*",
+    "index.d.ts*"
+  ],
+  "keywords": [
+    "worker",
+    "cors",
+    "shared"
+  ],
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  }
+}
