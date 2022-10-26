@@ -9,8 +9,9 @@ interface OmniWorkerInterface {
 }
 
 function OmniWorkerTemplate(scriptUrl: string): void {
-	self.onunhandledrejection = event => {
-		throw event.reason
+	self.onunhandledrejection = e => {
+		e.preventDefault()
+		throw e.reason
 	}
 	importScripts(scriptUrl)
 }
