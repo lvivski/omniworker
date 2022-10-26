@@ -26,5 +26,10 @@
   ],
   "devDependencies": {
     "typescript": "^4.8.4"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "semi": false,
+    "singleQuote": true
   }
 }
