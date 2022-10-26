@@ -8,10 +8,17 @@ interface OmniWorkerInterface {
 		: Worker
 }
 
+function OmniWorkerTemplate(scriptUrl: string): void {
+	self.onunhandledrejection = event => {
+		throw event.reason
+	}
+	importScripts(scriptUrl)
+}
+
 class OmniWorker {
 	constructor(scriptUrl: string | URL, options?: OmniWorkerOptions) {
 		const name = scriptUrl.toString().split('/').pop()
-		const workerTemplate = `importScripts(${JSON.stringify(scriptUrl)});`
+		const workerTemplate = `(${OmniWorkerTemplate.toString()})(${JSON.stringify(scriptUrl)});`
 		const type = 'application/javascript'
 
 		let worker: Worker | SharedWorker
