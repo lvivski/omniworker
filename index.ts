@@ -8,6 +8,8 @@ interface OmniWorkerInterface {
 		: Worker
 }
 
+declare var self: Worker & typeof globalThis
+
 function OmniWorkerTemplate(scriptUrl: string): void {
 	self.onunhandledrejection = e => {
 		e.preventDefault()
