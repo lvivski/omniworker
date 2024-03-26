@@ -18,7 +18,9 @@
   },
   "files": [
     "index.js*",
-    "index.d.ts*"
+    "index.d.ts*",
+    "wrap.js*",
+    "wrap.d.ts*"
   ],
   "keywords": [
     "worker",
@@ -26,7 +28,7 @@
     "shared"
   ],
   "devDependencies": {
-    "typescript": "^4.8.4"
+    "typescript": "^5"
   },
   "prettier": {
     "printWidth": 120,
