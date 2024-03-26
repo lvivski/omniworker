@@ -43,6 +43,8 @@ export function wrap<T>(obj: Wrappable, transport?: Transport) {
 	return result
 }
 
+export const ignoreResult = Symbol('ignoreResult')
+
 type Deferred<T> = {
 	resolve: (value: T) => void
 	reject: (error: Error) => void
@@ -78,13 +80,17 @@ function proxy<T>(transport: Transport, path: (string | symbol)[] = []): Wrapped
 			}
 			return proxy(transport, [...path, prop])
 		},
-		apply(_target, _this, args) {
+		apply(_target, context, args) {
 			return new Promise((resolve, reject) => {
-				const id = Math.random().toString(36).slice(2)
-				const deferred = { resolve, reject }
-				const map = registry.get(transport) ?? new Map<string, Deferred<any>>()
-				map.set(id, deferred)
-				registry.set(transport, map)
+				let id: string | undefined
+				const shouldReturn = !context?.[ignoreResult]
+				if (shouldReturn) {
+					id = Math.random().toString(36).slice(2)
+					const deferred = { resolve, reject }
+					const map = registry.get(transport) ?? new Map<string, Deferred<any>>()
+					map.set(id, deferred)
+					registry.set(transport, map)
+				}
 				transport.postMessage(
 					{
 						id,
@@ -94,6 +100,9 @@ function proxy<T>(transport: Transport, path: (string | symbol)[] = []): Wrapped
 					},
 					args.filter(isTransferrable)
 				)
+				if (!shouldReturn) {
+					resolve(undefined)
+				}
 			})
 		},
 	}) as Wrapped<T>
@@ -123,10 +132,12 @@ function expose(obj: Wrappable, transport: Transport) {
 				result = Promise.reject(error)
 			}
 
-			Promise.resolve(result).then(
-				value => transport.postMessage({ id, type: MessageType.Return, value }),
-				error => transport.postMessage({ id, type: MessageType.Return, error })
-			)
+			if (id) {
+				Promise.resolve(result).then(
+					value => transport.postMessage({ id, type: MessageType.Return, value }),
+					error => transport.postMessage({ id, type: MessageType.Return, error })
+				)
+			}
 		}
 	})
 
