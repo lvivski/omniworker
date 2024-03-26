@@ -129,6 +129,9 @@ function expose(obj: Wrappable, transport: Transport) {
 				const args = rawArgs.map(arg => (arg instanceof MessagePort ? listen(arg) : arg))
 				result = method.apply(context, args)
 			} catch (error) {
+				if (!id) {
+					throw error
+				}
 				result = Promise.reject(error)
 			}
 
