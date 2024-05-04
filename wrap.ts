@@ -18,6 +18,7 @@ type Transport = MessagePort | Worker
 
 const enum MessageType {
 	Invoke = 'invoke',
+	IgnoreResult = 'ignore',
 	Return = 'return',
 }
 
@@ -82,10 +83,10 @@ function proxy<T>(transport: Transport, path: (string | symbol)[] = []): Wrapped
 		},
 		apply(_target, context, args) {
 			return new Promise((resolve, reject) => {
-				let id: string | undefined
-				const shouldReturn = !context?.[ignoreResult]
-				if (shouldReturn) {
-					id = Math.random().toString(36).slice(2)
+				const id = Math.random().toString(36).slice(2)
+				const type = context?.[ignoreResult] ? MessageType.IgnoreResult : MessageType.Invoke
+
+				if (type === MessageType.Invoke) {
 					const deferred = { resolve, reject }
 					const map = registry.get(transport) ?? new Map<string, Deferred<any>>()
 					map.set(id, deferred)
@@ -94,13 +95,13 @@ function proxy<T>(transport: Transport, path: (string | symbol)[] = []): Wrapped
 				transport.postMessage(
 					{
 						id,
-						type: MessageType.Invoke,
+						type,
 						path,
 						args,
 					},
 					args.filter(isTransferrable)
 				)
-				if (!shouldReturn) {
+				if (type === MessageType.IgnoreResult) {
 					resolve(undefined)
 				}
 			})
@@ -118,7 +119,7 @@ function expose(obj: Wrappable, transport: Transport) {
 	transport.addEventListener('message', e => {
 		const event = e as MessageEvent
 		const { id, type, path = [], args: rawArgs = [] } = event.data
-		if (type === MessageType.Invoke) {
+		if (type === MessageType.Invoke || type === MessageType.IgnoreResult) {
 			let result
 			try {
 				const method = atPath(obj, path)
@@ -135,7 +136,7 @@ function expose(obj: Wrappable, transport: Transport) {
 				result = Promise.reject(error)
 			}
 
-			if (id) {
+			if (type === MessageType.Invoke) {
 				Promise.resolve(result).then(
 					value => transport.postMessage({ id, type: MessageType.Return, value }),
 					error => transport.postMessage({ id, type: MessageType.Return, error })

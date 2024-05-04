@@ -15,7 +15,21 @@ function OmniWorkerTemplate(scriptUrl: string): void {
 		e.preventDefault()
 		throw e.reason
 	}
-	importScripts(scriptUrl)
+
+	const messageQueue: Event[] = []
+	self.addEventListener('message', queueMessage)
+
+	setTimeout(loadScript)
+
+	function loadScript(): void {
+		importScripts(scriptUrl)
+		self.removeEventListener('message', queueMessage)
+		messageQueue.forEach(event => self.dispatchEvent(event))
+	}
+
+	function queueMessage(event: MessageEvent): void {
+		messageQueue.push(event)
+	}
 }
 
 class OmniWorker {
